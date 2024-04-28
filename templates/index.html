@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enter Rules and Arguments</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<form method="POST">
+    <label for="rule">Enter a rule set : [{ruleName}] {premises}{-> or =>}{conclusion} {ruleWeight} , comma (;) separated, space matters </label><br>
+    <input type="text" id="rule" name="rule" value="[r1] ->a ; [r2] d,b->c ; [r3] !c->d ; [r10] !c,b->!d ; [r11] !c,d->!b ; [r12] !d->c ; [r4] a=>!d 0 ; [r5] =>b 1 ; [r6] =>!c 1 ; [r7] =>d 0 ; [r8] c=>e 0 ; [r9] !c=>!r4 0"><br>
+<!--    <label for="argument">Enter an argument:</label><br>-->
+<!--    <input type="text" id="argument" name="argument"><br>-->
+    <input type="submit" value="Submit">
+    <input type="submit" value="Reset">
+</form>
+<title>Rules and Arguments</title>
+<h1>Rules</h1>
+<h2>Number : {{data.rule_length}} </h2>
+<ul>
+    {% for rule in data.rules %}
+    <li>{{ rule }}</li>
+    {% endfor %}
+</ul>
+<h1>Extended Rules (base extended by contrapositions)</h1>
+<h2>Number : {{data.extended_rule_length}} </h2>
+<ul>
+    {% for erule in data.extended_rule_space %}
+    <li>{{ erule }}</li>
+    {% endfor %}
+</ul>
+
+<h1>Arguments</h1>
+<h2>Number : {{data.arguments_length}} </h2>
+<ul>
+    {% for argument in data.arguments %}
+    <li>{{ argument }}</li>
+    {% endfor %}
+</ul>
+<h1>Generated Attacks</h1>
+<h2>Undercuts </h2>
+<div class="arguments-container">
+    <div class="text-container">
+        <ul>
+            {% for attu in data.undercuts_space %}
+            <li>{{ attu }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="graph-container">
+        <!-- images are served as static, need current_time so on refresh the ancient image isn't displayed -->
+        <img class="graph-image" src="{{ url_for('static', filename='images/undercuts_attack_graph.png') }}?{{ current_time }}" alt="Undercuts graph">
+    </div>
+</div>
+<h2>Rebuts </h2>
+<div class="arguments-container">
+    <div class="text-container">
+        <ul>
+            {% for attr in data.rebuts_space %}
+            <li>{{ attr }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="graph-container">
+        <img class="graph-image" src="{{ url_for('static', filename='images/rebuts_attack_graph.png') }}?{{ current_time }}" alt="Rebuts graph">
+    </div>
+</div><h1>Graph Representation(s)</h1>
+<h2>Rule Graph ?</h2>
+<h2>Attacks Graph</h2>
+
+<h1>Arguments ranking using burden-based ranking (applied to defeat graph)</h1>
+<h2> {{data.ranking_burden}}</h2>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

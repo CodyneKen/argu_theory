@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+form {
+    margin-bottom: 2em;
+}
+
+h1, h2 {
+    color: #333;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.arguments-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.arguments-container .text-container {
+    flex: 15;
+}
+
+.arguments-container .graph-container {
+    flex: 85;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.arguments-container .graph-container img {
+    max-width: 100%;
+}
+
+.graph-image {
+    font-size: 0;  /* Hide alt text */
+}
+
+.hidden {
+    display: none;
+}
