@@ -8,14 +8,15 @@ from literal import Literal
 
 
 class Rule:
-    counter = 0
+    counter = 1
 
     # Si pas de premises, alors p = []
-    def __init__(self, p, c, d):
+    def __init__(self, p, c, d, indice=None):
         self.premises = p  # array
         self.conclusion = c
         self.defeasible = d  # boolean, False if not defeasible
         self.literal = Literal("r" + str(Rule.counter), True)
+        self.indice = indice
         Rule.counter += 1
 
     @staticmethod

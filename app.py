@@ -23,7 +23,7 @@ def separate_rules(rule):
     return rule.split(';')
 
 
-def str_to_rule(rule_name, literals, strict, conclusion):
+def str_to_rule(rule_name, literals, strict, conclusion, indice=None):
     literal_set = set()
     for literal in literals:
         # Determine whether the literal is negated
@@ -40,7 +40,7 @@ def str_to_rule(rule_name, literals, strict, conclusion):
         conclusion_literal = Literal(conclusion, True)
 
     # Create a Rule object with the set of literals, the conclusion literal, and whether the rule is strict
-    rule = Rule(literal_set, conclusion_literal, strict)
+    rule = Rule(literal_set, conclusion_literal, not strict, indice)
     return rule
 
 
@@ -60,7 +60,7 @@ def parse_rule2(line):
     conclusion = parts[1]
     return str_to_rule(rule_name, literals, strict, conclusion)
 
-
+# TODO INVERSé les rules strict/defeasible, a switch
 def parse_rule(line):
     # Remove whitespace and split the line into parts
     parts = line.strip().split(' ')
@@ -79,6 +79,10 @@ def parse_rule(line):
     # Determine whether the rule is strict or defeasible
     is_strict = '->' in rule_body_and_conclusion
     # Create a set of literals
+
+    if len(literals_and_conclusion) > 2:
+        indice = literals_and_conclusion[2]
+        rule = str_to_rule(rule_name, literals, not is_strict, conclusion, indice)
 
     rule = str_to_rule(rule_name, literals, is_strict, conclusion)
 
@@ -199,6 +203,8 @@ def home():
             'extended_rule_length': len(extended_rule_space),
             'rule_length': len(rule_space),
             'arguments_length': len(arguments),
+            'rebuts_length': len(attacks_rebuts_space),
+            'undercuts_length': len(attacks_undercuts_space),
 
         }
         return render_template('index.html', data=display_data, current_time=time())

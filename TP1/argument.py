@@ -2,7 +2,7 @@ from rule import *
 
 
 class Argument:
-    counter = 0
+    counter = 1
 
     def __init__(self, toprule):
         self.name = "a" + str(Argument.counter)
@@ -12,7 +12,7 @@ class Argument:
 
     @staticmethod
     def reset_counter():
-        Argument.counter = 0
+        Argument.counter = 1
 
     def __str__(self):
         if (self._toprule.defeasible):

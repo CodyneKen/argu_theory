@@ -8,8 +8,8 @@ Bohelay Corentin:
 
 Hanampatra Gernido:
 - TP1 (classes creation) : __str__ display for all classes, 
-- TP2 (generation & export) : 
-- TP3 :
+- TP2 (generation & export) : attacksGenerator.py (pour générer les rebuts et undercuts à partir d'arguments et de règles).
+- TP3 : rankArgument.py (permet de classer les arguments par ordre de préférences selon la sémantique Burden-based).
 - TP4 : 
 
 Mendo Sebastien:

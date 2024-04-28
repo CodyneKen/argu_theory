@@ -8,7 +8,7 @@ import operator
 # For debugging
 if __name__ == '__main__':
     # Open the KB.txt file in read mode
-    with open('KB.txt', 'r') as file:
+    with open('KBs/KB.txt', 'r') as file:
         # Create a set to store the rules
         rules = set()
         # Read each line of the file

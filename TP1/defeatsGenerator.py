@@ -3,15 +3,8 @@ from attacksGenerator import checkContradictionArg
 
 class DefeatGenerator:
 
-    def __init__(self):
-        self.rules_preferences = {
-            "r5": 1,
-            "r6": 1,
-            "r4": 0,
-            "r7": 0,
-            "r8": 0,
-            "r9": 0
-        }
+
+    #self.rules_preferences = {"r3": 3, "r4": 3, "r5": 3, "r6": 2, "r7": 1, "r8": 0} # exemple du cours
 
     def showPreferences(self, dict):
         last_value = 0
@@ -61,14 +54,13 @@ class DefeatGenerator:
             else:
                 print(tuple[0].name, "", end='')
 
-
     def getArgumentsPreferences(self, arguments):
         self.argumentsPreferences = []
 
         for arg in arguments:
 
             if len(self.argumentsPreferences) == 0:
-                if len(arg.lastDefeasibleRules()) == 0:
+                if len(arg.defeasibleRules()) == 0:
                     self.argumentsPreferences.append((arg, 2))
                 else:
                     self.argumentsPreferences.append((arg, 0))
@@ -77,7 +69,6 @@ class DefeatGenerator:
                 self.AddArgumentToPreferencesList(arg)  
 
         self.argumentsPreferences.sort(key=lambda a: a[1], reverse = True)
-
 
     def DemocraticBetweenTwoRules(self, set_def_rule1, set_def_rule2):
         are_all_rules1_sup = True
@@ -89,7 +80,7 @@ class DefeatGenerator:
             are_all_rules1_sup = True
             
             for rule1 in set_def_rule1:
-                if self.rules_preferences[rule1.literal._name] < self.rules_preferences[rule2.literal._name]:
+                if rule1.indice < rule2.indice:
                     are_all_rules1_sup = False
 
             if are_all_rules1_sup:
@@ -108,12 +99,13 @@ class DefeatGenerator:
         for arg2 in self.argumentsPreferences:
             cpt_arg += 1
             self.argumentsPreferences.sort(key=lambda a: a[1], reverse = True)
+            dem_1 = self.DemocraticBetweenTwoRules(arg.defeasibleRules(), arg2[0].defeasibleRules())
+            dem_2 = self.DemocraticBetweenTwoRules(arg2[0].defeasibleRules(), arg.defeasibleRules())
+            
             print("#########")
             for a in self.argumentsPreferences:
                 print(a[0].name, "|", a[1])
-            dem_1 = self.DemocraticBetweenTwoRules(arg.lastDefeasibleRules(), arg2[0].lastDefeasibleRules())
-            dem_2 = self.DemocraticBetweenTwoRules(arg2[0].lastDefeasibleRules(), arg.lastDefeasibleRules())
-            
+
             # si l'argument est préféré au sens démocratique on prend le score de celui avec qui on compare plus un
             if dem_1:
                 if dem_2: #égal
@@ -126,13 +118,14 @@ class DefeatGenerator:
                     return
             
             else:
+                print(arg.name, "<", arg2[0].name)
+
                 if cpt_arg == len(self.argumentsPreferences):
-                    self.argumentsPreferences.append((arg, last_value -1))
+                    self.argumentsPreferences.append((arg, arg2[1] - 1))
+                    return
                 else:
-                    print(arg.name, "<", arg2[0].name)
                     last_value = arg2[1]
 
-    
     def GenerateDefeats(self, undercuts, rebuts):
         self.defeats = []
 
@@ -141,18 +134,28 @@ class DefeatGenerator:
 
         for r in rebuts:
             sub_args = r.attacked.subArguments()
+            run = True
 
             for arg in sub_args:
 
-                if r.attacker._toprule.conclusion == ~arg._toprule.conclusion:
+                if run and r.attacker._toprule.conclusion == ~arg._toprule.conclusion:
 
                     v1 = self.FindArgumentValueByName(r.attacker)
                     v2 = self.FindArgumentValueByName(arg)
 
                     if v1 >= v2:
                         self.defeats.append(r)
-                        break
-                        
+                        run = False
+                        #break
+
+            # also checking if conc(r.attacker) = ~(r.attacked)
+            if run and r.attacker._toprule.conclusion == ~r.attacked._toprule.conclusion:
+                v1 = self.FindArgumentValueByName(r.attacker)
+                v2 = self.FindArgumentValueByName(r.attacked)
+
+                if v1 >= v2:
+                    self.defeats.append(r)
+                    run = False
 
     def FindArgumentValueByName(self, arg):
 
