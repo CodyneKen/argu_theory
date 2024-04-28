@@ -17,7 +17,7 @@ def generateArgumentsWithoutPremises(rules):
     arguments = set()
 
     for rule in rules:
-        print(rule)
+        print(rule, "|", rule.indice)
         if not rule.premises:
             arguments.add(Argument(rule))
     

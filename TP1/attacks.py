@@ -8,7 +8,7 @@ from argument import *
 
 
 class Attack:
-    counter = 0
+    counter = 1
     attacker: Argument
     attacked: Argument
 
@@ -20,7 +20,7 @@ class Attack:
 
     @staticmethod
     def reset_counter():
-        Attack.counter = 0
+        Attack.counter = 1
 
     def __str__(self):
         return f"""att({self.attacker.name}, {self.attacked.name})"""

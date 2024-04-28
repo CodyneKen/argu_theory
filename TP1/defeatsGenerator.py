@@ -3,8 +3,31 @@ from attacksGenerator import checkContradictionArg
 
 class DefeatGenerator:
 
+    def ShowRulesPreferences(self, rules):
+        sorted_rules = []
 
-    #self.rules_preferences = {"r3": 3, "r4": 3, "r5": 3, "r6": 2, "r7": 1, "r8": 0} # exemple du cours
+        #sorting rules
+        for rule in rules:
+            if rule.defeasible:
+                sorted_rules.append(rule)
+
+        sorted_rules.sort(key=lambda a: a.indice, reverse = True)
+        last_value = 0
+        first = True
+
+        for rule in sorted_rules:
+            if first:
+                last_value = rule.indice
+                first = False
+                print(rule.literal._name, "", end='')
+            else:
+                if last_value > rule.indice:
+                    print(">", rule.literal._name, "", end='')
+                    last_value = rule.indice
+                else:
+                    print(rule.literal._name, "", end='')
+        
+        print("")
 
     def showPreferences(self, dict):
         last_value = 0
@@ -54,10 +77,11 @@ class DefeatGenerator:
             else:
                 print(tuple[0].name, "", end='')
 
-    def getArgumentsPreferences(self, arguments):
+    def getArgumentsPreferences(self, arguments, democratic, last_link):
         self.argumentsPreferences = []
 
         for arg in arguments:
+            self.argumentsPreferences.sort(key=lambda a: a[1], reverse = True)
 
             if len(self.argumentsPreferences) == 0:
                 if len(arg.defeasibleRules()) == 0:
@@ -66,7 +90,7 @@ class DefeatGenerator:
                     self.argumentsPreferences.append((arg, 0))
 
             else:
-                self.AddArgumentToPreferencesList(arg)  
+                self.AddArgumentToPreferencesList(arg, democratic, last_link)
 
         self.argumentsPreferences.sort(key=lambda a: a[1], reverse = True)
 
@@ -88,7 +112,27 @@ class DefeatGenerator:
 
         return False
 
-    def AddArgumentToPreferencesList(self, arg):
+    def ElitistBetweenTwoRules(self, set_def_rule1, set_def_rule2):
+
+        if len(set_def_rule1) == 0:
+            return True
+        
+        if len(set_def_rule2) == 0:
+            return False
+
+        for rule1 in set_def_rule1:
+            sup_equal = True
+
+            for rule2 in set_def_rule2:
+                if rule1.indice < rule2.indice:
+                    sup_equal = False
+
+            if sup_equal:
+                return True
+            
+        return False
+
+    def AddArgumentToPreferencesList(self, arg, democratic, last_link): # democratic is boolean
         last_value = 2
         cpt_arg = 0
 
@@ -99,26 +143,41 @@ class DefeatGenerator:
         for arg2 in self.argumentsPreferences:
             cpt_arg += 1
             self.argumentsPreferences.sort(key=lambda a: a[1], reverse = True)
-            dem_1 = self.DemocraticBetweenTwoRules(arg.defeasibleRules(), arg2[0].defeasibleRules())
-            dem_2 = self.DemocraticBetweenTwoRules(arg2[0].defeasibleRules(), arg.defeasibleRules())
+            dem_1 = 0
+            dem_2 = 0
+
+            if democratic:
+                if last_link:
+                    dem_1 = self.DemocraticBetweenTwoRules(arg.lastDefeasibleRules(), arg2[0].lastDefeasibleRules())
+                    dem_2 = self.DemocraticBetweenTwoRules(arg2[0].lastDefeasibleRules(), arg.lastDefeasibleRules())
+                else:
+                    dem_1 = self.DemocraticBetweenTwoRules(arg.defeasibleRules(), arg2[0].defeasibleRules())
+                    dem_2 = self.DemocraticBetweenTwoRules(arg2[0].defeasibleRules(), arg.defeasibleRules())
+            else:
+                if last_link:
+                    dem_1 = self.ElitistBetweenTwoRules(arg.lastDefeasibleRules(), arg2[0].lastDefeasibleRules())
+                    dem_2 = self.ElitistBetweenTwoRules(arg2[0].lastDefeasibleRules(), arg.lastDefeasibleRules())
+                else:
+                    dem_1 = self.ElitistBetweenTwoRules(arg.defeasibleRules(), arg2[0].defeasibleRules())
+                    dem_2 = self.ElitistBetweenTwoRules(arg2[0].defeasibleRules(), arg.defeasibleRules())
             
-            print("#########")
-            for a in self.argumentsPreferences:
-                print(a[0].name, "|", a[1])
+            #print("#########", arg2[0].name)
+            #for a in self.argumentsPreferences:
+            #    print(a[0].name, "|", a[1])
 
             # si l'argument est préféré au sens démocratique on prend le score de celui avec qui on compare plus un
             if dem_1:
                 if dem_2: #égal
                     self.argumentsPreferences.append((arg, arg2[1]))
-                    print(arg.name, "==", arg2[0].name)
+                    #print(arg.name, "==", arg2[0].name)
                     return
                 else: # strictement supérieur
                     self.argumentsPreferences.append((arg, (last_value + arg2[1]) / 2))
-                    print(arg.name, ">", arg2[0].name)
+                    #print(arg.name, ">", arg2[0].name)
                     return
             
             else:
-                print(arg.name, "<", arg2[0].name)
+                #print(arg.name, "<", arg2[0].name)
 
                 if cpt_arg == len(self.argumentsPreferences):
                     self.argumentsPreferences.append((arg, arg2[1] - 1))
@@ -127,15 +186,16 @@ class DefeatGenerator:
                     last_value = arg2[1]
 
     def GenerateDefeats(self, undercuts, rebuts):
-        self.defeats = []
+        self.defeats = set()
 
         for u in undercuts:
-            self.defeats.append(u)
+            self.defeats.add(u)
 
         for r in rebuts:
             sub_args = r.attacked.subArguments()
             run = True
 
+            # subarguments of the attacked argument
             for arg in sub_args:
 
                 if run and r.attacker._toprule.conclusion == ~arg._toprule.conclusion:
@@ -144,7 +204,7 @@ class DefeatGenerator:
                     v2 = self.FindArgumentValueByName(arg)
 
                     if v1 >= v2:
-                        self.defeats.append(r)
+                        self.defeats.add(r)
                         run = False
                         #break
 
@@ -154,7 +214,7 @@ class DefeatGenerator:
                 v2 = self.FindArgumentValueByName(r.attacked)
 
                 if v1 >= v2:
-                    self.defeats.append(r)
+                    self.defeats.add(r)
                     run = False
 
     def FindArgumentValueByName(self, arg):

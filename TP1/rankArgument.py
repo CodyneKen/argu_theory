@@ -8,6 +8,7 @@ import operator
 from typing import List, Set, Tuple, Dict
 from defeatsGenerator import *
 from argument import *
+from attacks import *
 
 """
 Compute the ranking between arguments using the burden-based-semantics.
@@ -16,11 +17,11 @@ and the key's value is a list with all its Burden numbers.
 Bur(a1) = <1, 2, ...> <=> "a1": [1, 2, ...] 
 """
 
-def getAttackers(argument: Argument, attacks: Set[Tuple[Argument, Argument]]):
+def getAttackers(argument: Argument, attacks: Set[Attack]):
     attackers = []
     for attack in attacks:
-        if attack[1] == argument:
-            attackers.append(attack[0])
+        if attack.attacked == argument:
+            attackers.append(attack.attacker)
     return attackers
 
 def computeBurden(arg: Argument, burdens: Dict, attackers: List[Argument], epsilon, curIndex):
@@ -54,7 +55,7 @@ def computeAllRankLargeur(arguments: Set[Argument], burdens: Dict, attackers: Li
             break
         curIndex += 1
     
-def computeBurdenValuesArguments(arguments: Set[Argument], attacks: Set[Tuple[Argument, Argument]], epsilon):
+def computeBurdenValuesArguments(arguments: Set[Argument], attacks: Set[Attack], epsilon):
     burdens = dict()
     attackers = dict()
     # Initialize burdens & attackers dictionary
@@ -88,7 +89,7 @@ def triInsertion(listToSort: List, burdens: Dict):
 
 
 # Bonne version
-# Fonction qui prend dict triée, et qui regarde, si le suivant et le précédent sont exactement les mêmes, alors ils ont le même rang, sinon ils n'ont pas le même rang
+# Fonction qui prend dict non trié, et qui regarde, si le suivant et le précédent sont exactement les mêmes, alors ils ont le même rang, sinon ils n'ont pas le même rang
 def rankFromBurdens2(burdens: Dict):
     sortedKeysList = [] # contient uniquement les clé
     for burden in burdens:
@@ -106,7 +107,7 @@ def rankFromBurdens2(burdens: Dict):
         previousValue = value
     return result
 
-def getDictArgsWithRanks(arguments: Set[Argument], attacks: Set[Tuple[Argument, Argument]], epsilon):
+def getDictArgsWithRanks(arguments: Set[Argument], attacks: Set[Attack], epsilon):
     burdens, _ = computeBurdenValuesArguments(arguments, attacks, epsilon)
     # print(burdens)
     dictArgsWithRanks = rankFromBurdens2(burdens)

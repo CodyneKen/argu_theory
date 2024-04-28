@@ -17,12 +17,12 @@ na = Literal('a', False)
 r1 = Rule(set(), c, False)
 r2 = Rule({d}, nb, False)
 
-r3 = Rule(set(), a, True)
-r4 = Rule(set(), b, True)
-r5 = Rule({a, b}, nc, True)
-r6 = Rule({c}, d, True)
-r7 = Rule({d}, na, True)
-r8 = Rule({nb}, ~(r6), True)
+r3 = Rule(set(), a, True, 2)
+r4 = Rule(set(), b, True, 2)
+r5 = Rule({a, b}, nc, True, 2)
+r6 = Rule({c}, d, True, 1)
+r7 = Rule({d}, na, True, 0)
+r8 = Rule({nb}, ~(r6), True, -1)
 
 
 rules.add(r1)
@@ -58,8 +58,7 @@ for u in undercuts:
 ######## Generating defeats ########
 print("\n--- Defeats generator ---")
 dg = DefeatGenerator()
-dg.showPreferences(dg.rules_preferences)
-dg.getArgumentsPreferences(arguments)
+dg.getArgumentsPreferences(arguments, False, True)
 
 print("nb arg:", len(dg.argumentsPreferences))
 
@@ -68,7 +67,7 @@ dg.GenerateDefeats(undercuts, rebuts)
 
 #for a in dg.defeats:
 #    print("(", a[0].name, ", ", a[1].name, ")", sep="")
-
+dg.ShowRulesPreferences(rules)
 dg.ShowArgumentsPreferences()
 print("\nNb defeats:", len(dg.defeats))
 

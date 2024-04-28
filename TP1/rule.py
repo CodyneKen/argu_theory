@@ -11,17 +11,17 @@ class Rule:
     counter = 1
 
     # Si pas de premises, alors p = []
-    def __init__(self, p, c, d, indice=None):
+    def __init__(self, p, c, d, name, indice=0):
         self.premises = p  # array
         self.conclusion = c
         self.defeasible = d  # boolean, False if not defeasible
-        self.literal = Literal("r" + str(Rule.counter), True)
+        self.literal = Literal(str(name), True)
         self.indice = indice
         Rule.counter += 1
 
     @staticmethod
     def reset_counter():
-        Rule.counter = 0
+        Rule.counter = 1
 
     def __str__(self) -> str:
         if len(self.premises) != 0:
@@ -53,9 +53,10 @@ class Rule:
             contrapo_rules = set()
             for premise in self.premises:
                 new_premises = set()
-                new_premises.update(self.premises.copy())
+                new_premises.update(self.premises)
                 new_premises.remove(premise)
                 new_premises.add(~self.conclusion)
-                contrapo_rules.add(Rule(new_premises, ~(premise), False))
+                contrapo_rules.add(Rule(new_premises, ~(premise), False, "r" + str(Rule.counter)))
+                Rule.counter += 1
             return contrapo_rules
         return set()

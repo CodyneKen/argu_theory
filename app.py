@@ -14,6 +14,7 @@ from TP1.rule import *
 from TP1.argumentGenerator import *
 from TP1.attacksGenerator import *
 from TP1.defeatsGenerator import *
+from TP1.argument import *
 import operator
 
 app = Flask(__name__)
@@ -23,7 +24,10 @@ def separate_rules(rule):
     return rule.split(';')
 
 
-def str_to_rule(rule_name, literals, strict, conclusion, indice=None):
+def str_to_rule(rule_name, literals, strict, conclusion, indice=0):
+    print("str : indice", indice)
+    rule_name = rule_name.replace('[', '').replace(']', '')
+
     literal_set = set()
     for literal in literals:
         # Determine whether the literal is negated
@@ -40,7 +44,7 @@ def str_to_rule(rule_name, literals, strict, conclusion, indice=None):
         conclusion_literal = Literal(conclusion, True)
 
     # Create a Rule object with the set of literals, the conclusion literal, and whether the rule is strict
-    rule = Rule(literal_set, conclusion_literal, not strict, indice)
+    rule = Rule(literal_set, conclusion_literal, not strict, rule_name, indice)
     return rule
 
 
@@ -60,7 +64,7 @@ def parse_rule2(line):
     conclusion = parts[1]
     return str_to_rule(rule_name, literals, strict, conclusion)
 
-# TODO INVERSé les rules strict/defeasible, a switch
+
 def parse_rule(line):
     # Remove whitespace and split the line into parts
     parts = line.strip().split(' ')
@@ -80,12 +84,14 @@ def parse_rule(line):
     is_strict = '->' in rule_body_and_conclusion
     # Create a set of literals
 
-    if len(literals_and_conclusion) > 2:
-        indice = literals_and_conclusion[2]
+    print("parts", parts)
+
+    if len(parts) > 2:
+        indice = parts[2]
+        print("indice", indice)
         rule = str_to_rule(rule_name, literals, not is_strict, conclusion, indice)
 
     rule = str_to_rule(rule_name, literals, is_strict, conclusion)
-
     return rule
 
 
@@ -94,12 +100,9 @@ def gen_attack_graph(attack_space, name):
     G.clear()  # Clear the graph
     # idNode = 0
     for a in attack_space:
-        print("in gen_attack_graph", a.attacker.name, a.attacked.name)
         if a.attacker.name not in G:
-            print("in gen_attack_graph added node R", a.attacker.name)
             G.add_node(a.attacker.name)
         if a.attacked.name not in G:
-            print("in gen_attack_graph added node D", a.attacked.name)
             G.add_node(a.attacked.name)
         G.add_edge(a.attacker.name, a.attacked.name)
         # G.add_edge(idNode, idNode)
@@ -126,8 +129,10 @@ def gen_attack_graph(attack_space, name):
     # g_name = "static/images/" + name + "_attack_graph.png"
     if (name == "rebuts"):
         g_name = "static/images/rebuts_attack_graph.png"
-    else:
+    elif (name == "undercuts"):
         g_name = "static/images/undercuts_attack_graph.png"
+    elif (name == "defeats"):
+        g_name = "static/images/defeats_attack_graph.png"
     plt.savefig(g_name, format="PNG", bbox_inches='tight', pad_inches=-0.1)
 
 
@@ -137,60 +142,63 @@ def home():
     if request.method == 'POST':
         rule = request.form.get('rule')
         Rule.reset_counter()
-        print("Rule counter:", Rule.counter)
+        
         rule_space = set()
         rule_array = separate_rules(rule)
         for r in rule_array:
             rule_space.add(parse_rule(r))
 
         # Flask input :
-        print('Rule (separated by ; for several):', rule)
         for r in rule_space:
             print(r)
 
         print("Rule space - Taille: ", len(rule_space))
 
         extended_rule_space = set()
-        extended_rule_space = generateContrapos(rule_space)
-        for r in extended_rule_space:
-            print(r)
 
-        print("Extended rule space - Taille: ", len(extended_rule_space))
         Argument.reset_counter()
         arguments = generateArguments(rule_space)
 
         Attack.reset_counter()
-        attacks_rebuts_space = set()
         print("Arguments - Taille: ", len(arguments))
         attacks_rebuts_space = generateRebutsAttacks(arguments)
         print("Rebuts - (Attaquant, Attaqué) - Taille: ", len(attacks_rebuts_space))
         # for at in attacks_rebuts_space:
         #     print(at)
 
-        attacks_undercuts_space = set()
         print("Arguments - Taille: ", len(arguments))
         attacks_undercuts_space = generateUndercutsAttack(arguments)
         print("Undercuts - (Attaquant, Attaqué) - Taille: ", len(attacks_undercuts_space))
         # for at in attacks_undercuts_space:
         #     print(at)
 
-        # gen_attack_graph(attacks_rebuts_space, "rebuts")
-        # gen_attack_graph(attacks_undercuts_space, "undercuts")
+        gen_attack_graph(attacks_rebuts_space, "rebuts")
+        gen_attack_graph(attacks_undercuts_space, "undercuts")
 
         # Defeat are successful attacks
         # filtered_attacks = defeats - all_attacks
         # Passe 94 -> 77
 
-        rebuts = generateRebuts(arguments)
+        # Gernido a rajouter ces rebuts, check les memes que celles que je génère au dessus
+        rebuts = generateRebutsAttacks(arguments)
+        undercuts = generateUndercutsAttack(arguments)
+        ######## Generating defeats ########
+        print("\n--- Defeats generator ---")
+        dg = DefeatGenerator()
+        dg.getArgumentsPreferences(arguments, False, True)
+        # dg.showPreferences(dg.rules_preferences)
+        # print("nb arg:", len(dg.argumentsPreferences))
+        dg.GenerateDefeats(undercuts, rebuts)
+
         ### Rank Argument - burden-based-semantics
         print("### Rank Argument ###")
-        dg = DefeatGenerator()
-        dictArgWithRanks = getDictArgsWithRanks(arguments, rebuts, 0.5)
+        dictArgWithRanks = getDictArgsWithRanks(arguments, attacks_rebuts_space, 0.5)
         so = dict(sorted(dictArgWithRanks.items(), key=operator.itemgetter(1), reverse=True))
         print(dg.showPreferencesString(so))
 
-        # Display arguments, rules
-        # TODO Make the display graphical
+        defeats_space = dg.defeats
+        gen_attack_graph(defeats_space, "defeats")
+
         display_data = {
             # SET SPACES
             'rules': rule_space,
@@ -198,6 +206,7 @@ def home():
             'extended_rule_space': extended_rule_space,
             'rebuts_space': attacks_rebuts_space,
             'undercuts_space': attacks_undercuts_space,
+            'defeats_space': defeats_space,
             'ranking_burden': dg.showPreferencesString(so),
             # LENGTHS (can't be calculated in page)
             'extended_rule_length': len(extended_rule_space),
@@ -205,6 +214,7 @@ def home():
             'arguments_length': len(arguments),
             'rebuts_length': len(attacks_rebuts_space),
             'undercuts_length': len(attacks_undercuts_space),
+            'defeats_length': len(defeats_space),
 
         }
         return render_template('index.html', data=display_data, current_time=time())

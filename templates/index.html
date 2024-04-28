@@ -65,7 +65,22 @@
     <div class="graph-container">
         <img class="graph-image" src="{{ url_for('static', filename='images/rebuts_attack_graph.png') }}?{{ current_time }}" alt="Rebuts graph">
     </div>
-</div><h1>Graph Representation(s)</h1>
+</div>
+<h2>Defeats </h2>
+<h2>Number : {{data.defeats_length}} </h2>
+<div class="arguments-container">
+    <div class="text-container">
+        <ul>
+            {% for attr in data.defeats_space %}
+            <li>{{ attr }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="graph-container">
+        <img class="graph-image" src="{{ url_for('static', filename='images/defeats_attack_graph.png') }}?{{ current_time }}" alt="Rebuts graph">
+    </div>
+</div>
+<h1>Graph Representation(s)</h1>
 <h2>Rule Graph ?</h2>
 <h2>Attacks Graph</h2>
 

@@ -14,9 +14,8 @@ def checkCInDefeasible(conclusion, defeasibles):
 def checkAttackDefeasible(argument, arguments):
     undercuts = set()
     for arg in arguments:
-        if (argument != arg):
-            if (checkCInDefeasible(argument._toprule.conclusion, arg.defeasibleRules())):
-                undercuts.add((argument, arg))
+        if (checkCInDefeasible(argument._toprule.conclusion, arg.defeasibleRules())):
+            undercuts.add((argument, arg))
     return undercuts
 
 
